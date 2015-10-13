@@ -1,0 +1,13 @@
+html, body {
+    height: 100%;
+}
+
+body {
+    padding-top: 70px;
+    background-color: rgb(30,30,30);
+    color: lightgray;
+}
+canvas {
+    border: black 1px solid;
+    overflow: scroll;
+}
