@@ -11,22 +11,16 @@ function Canvas(id) {
     this.context = this.element.getContext('2d');
 
     // Properties initialization
-    this.center = { x: 0, y: 0 };
+    priv.center = { x: 0, y: 0 };
     this.zoomFactor = 1;
     this.scaleFactor = 1;
-
-    // Default style
-    this.context.strokeStyle = '#333333';
-    this.context.fillStyle = '#666666';
-    this.context.font = '9px sans-serif';
-
 
     this.scale = function (scale) {
         my.scaleFactor = scale;
     };
 
-    this.recenter = function () {
-        my.center = {
+    this.center = function () {
+        priv.center = {
             x: my.context.canvas.width / 2,
             y: my.context.canvas.height / 2
         };
@@ -36,7 +30,7 @@ function Canvas(id) {
         console.log('Resizing canvas #' + my.element.getAttribute('id'));
         my.context.canvas.width = my.container.clientWidth;
         //this.context.canvas.height = this.container.clientHeight;
-        my.recenter();
+        my.center();
     };
     this.resize();
 
@@ -53,8 +47,8 @@ function Canvas(id) {
         // on X-axis to get a usual (O,x→,y↑) affine frame
         coords = priv.point(coords);
         return {
-            x: my.center.x + coords.x * my.zoomFactor / my.scaleFactor,
-            y: my.center.y - coords.y * my.zoomFactor / my.scaleFactor // minus to mirror on X-axis
+            x: priv.center.x + coords.x * my.zoomFactor / my.scaleFactor,
+            y: priv.center.y - coords.y * my.zoomFactor / my.scaleFactor // minus to mirror on X-axis
         };
     };
 
@@ -98,10 +92,10 @@ function Canvas(id) {
     // Frame private methods and public drawer
     priv.frame = {
         zeroCross: function () {
-            var topCenter = { x: my.center.x, y: 0 },
-                bottomCenter = { x: my.center.x, y: my.context.canvas.height },
-                middleLeft = { x: 0, y: my.center.y },
-                middleRight = { x: my.context.canvas.width, y: my.center.y };
+            var topCenter = { x: priv.center.x, y: 0 },
+                bottomCenter = { x: priv.center.x, y: my.context.canvas.height },
+                middleLeft = { x: 0, y: priv.center.y },
+                middleRight = { x: my.context.canvas.width, y: priv.center.y };
             my.draw.line(topCenter, bottomCenter);
             my.draw.line(middleLeft, middleRight);
         },
@@ -109,11 +103,11 @@ function Canvas(id) {
 
         },
         rangeRing: function (radius, text) {
-            my.draw.circle(my.center, radius / my.scaleFactor);
+            my.draw.circle(priv.center, radius / my.scaleFactor);
             if (text) {
                 if (radius >= 1000) text = radius / 1000 + " K";
                 if (radius >= 1000000) text = radius / 1000000 + " M";
-                my.context.fillText(text, my.center.x - radius / my.scaleFactor + 3, my.center.y + 10);
+                my.context.fillText(text, priv.center.x - radius / my.scaleFactor + 3, priv.center.y + 10);
             }
         }
     };
@@ -126,8 +120,11 @@ function Canvas(id) {
         options.xCross = options.hasOwnProperty('xCross') ? options.xCross : true;
         options.rings = options.hasOwnProperty('rings') ? options.rings : true;
 
-        console.debug('Frame drawing options', options);
+        my.context.strokeStyle = '#292929';
+        my.context.fillStyle = '#444444';
+        my.context.font = '9px sans-serif';
 
+        console.debug('Frame drawing options', options);
         if (options.zero) {
             priv.frame.rangeRing(3 * my.scaleFactor, false);
         }
