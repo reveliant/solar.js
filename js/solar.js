@@ -12,6 +12,7 @@ function Canvas(id) {
 
     // Properties initialization
     priv.center = { x: 0, y: 0 };
+    my.origin = { x: 0, y: 0 };
     this.zoomFactor = 1;
     this.scaleFactor = 1;
 
@@ -42,13 +43,13 @@ function Canvas(id) {
         point.y = point.hasOwnProperty('y') ? point.y : null;
         return point;
     };
-    priv.cartesian = function (coords) {
+    priv.cartesian = function (point) {
         // Canvas affine frames are (O,x→,y↓), we've to mirror
         // on X-axis to get a usual (O,x→,y↑) affine frame
-        coords = priv.point(coords);
+        point = priv.point(point);
         return {
-            x: priv.center.x + coords.x * my.zoomFactor / my.scaleFactor,
-            y: priv.center.y - coords.y * my.zoomFactor / my.scaleFactor // minus to mirror on X-axis
+            x: priv.center.x + point.x * my.zoomFactor / my.scaleFactor,
+            y: priv.center.y - point.y * my.zoomFactor / my.scaleFactor // minus to mirror on X-axis
         };
     };
 
@@ -70,19 +71,37 @@ function Canvas(id) {
             my.context.closePath();
             my.context.stroke();
         },
-        ellipse: function (center, apapsis, periapsis, semiMajor, eccentricity, angleOffset, color) {
-            var semiMinor = Math.sqrt(apapsis * periapsis),
-                orbitX = semiMajor * eccentricity * Math.cos(angleOffset) + semiMajor,
-                orbitY = semiMajor * eccentricity * Math.sin(angleOffset),
-                angle, nodes = 1000;
+        ellipse: function (center, a, e, i) {
+            /*
+                Semi-Major Axis, a
+                Eccentricity, e
+                Inclination, i in degrees
+                Argument of Periapsis, omega
+                Time of Periapsis Passage, T
+                Longitude of Ascending Node, Omega
+            */
+            var inclination = (2 * Math.PI) * (i / 360), // inclination in radians
+                theta, angle, resolution = 1000,
+                r = a * (1 - e * e) / (1 - e),
+                orbit = {
+                    x: center.x + (a * e) * Math.cos(inclination) + r,
+                    y: center.y + (a * e) * Math.sin(inclination)
+                },
+                cartesian = priv.cartesian(orbit);
             center = priv.point(center);
 
+            my.context.moveTo(cartesian.x, cartesian.y);
             my.context.beginPath();
-            my.context.moveTo(center.x + orbitX / my.scaleFactor, center.y + orbitY / my.scaleFactor);
-            for (angle = 0; angle <= nodes; angle = angle + 1) {
-                orbitX = semiMajor * eccentricity * Math.cos(angleOffset) + semiMajor * Math.cos( (2 * Math.PI) * (angle / nodes));
-                orbitY = semiMajor * eccentricity * Math.sin(angleOffset) + semiMinor * Math.sin( (2 * Math.PI) * (angle / nodes));
-                my.context.lineTo(center.x + orbitX / my.scaleFactor, center.y + orbitY / my.scaleFactor);
+
+            for (angle = 0; angle <= resolution; angle = angle + 1) {
+                theta = (2 * Math.PI) * (angle / resolution);
+                r = a * (1 - e * e) / (1 - e * Math.cos(theta));
+                orbit = {
+                    x: center.x + (a * e) * Math.cos(i) + r * Math.cos(inclination + theta),
+                    y: center.y + (a * e) * Math.sin(i) + r * Math.sin(inclination + theta)
+                };
+                cartesian = priv.cartesian(orbit);
+                my.context.lineTo(cartesian.x, cartesian.y);
             }
             my.context.closePath();
             my.context.stroke();
@@ -143,6 +162,8 @@ function Canvas(id) {
 
     this.render = function () {
         my.draw.frame();
+        my.context.strokeStyle = '#77aa99';
+        my.draw.ellipse(my.origin, 149598261, 0.01671123, 0); // earth
     };
 }
 
@@ -151,7 +172,7 @@ var SolarCanvas = null;
 $(document).ready(function() {
     'use strict';
     SolarCanvas = new Canvas('view');
-    SolarCanvas.scale(500000);
+    SolarCanvas.scale(750000);
     SolarCanvas.render();
 
     $('canvas').scroll(function(){
