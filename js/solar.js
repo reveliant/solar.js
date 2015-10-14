@@ -84,8 +84,8 @@ function Canvas(id) {
                 theta, angle, resolution = 1000,
                 r = a * (1 - e * e) / (1 - e),
                 orbit = {
-                    x: center.x + (a * e) * Math.cos(inclination) + r,
-                    y: center.y + (a * e) * Math.sin(inclination)
+                    x: center.x + (a * e) * Math.cos(inclination) + r * Math.cos(inclination),
+                    y: center.y + (a * e) * Math.sin(inclination) + r * Math.sin(inclination)
                 },
                 cartesian = priv.cartesian(orbit);
             center = priv.point(center);
@@ -97,8 +97,8 @@ function Canvas(id) {
                 theta = (2 * Math.PI) * (angle / resolution);
                 r = a * (1 - e * e) / (1 - e * Math.cos(theta));
                 orbit = {
-                    x: center.x + (a * e) * Math.cos(i) + r * Math.cos(inclination + theta),
-                    y: center.y + (a * e) * Math.sin(i) + r * Math.sin(inclination + theta)
+                    x: center.x + (a * e) * Math.cos(inclination) + r * Math.cos(inclination + theta),
+                    y: center.y + (a * e) * Math.sin(inclination) + r * Math.sin(inclination + theta)
                 };
                 cartesian = priv.cartesian(orbit);
                 my.context.lineTo(cartesian.x, cartesian.y);
